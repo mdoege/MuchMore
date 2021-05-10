@@ -344,7 +344,10 @@ class MuchMore:
         s.screen.blit(out, (0, 0))
         pygame.display.flip()
 
-        perc = 100 * (s.curline + found + 1) / numl
+        if found > -1:
+            perc = 100 * (s.curline + found) / numl
+        else:
+            perc = 100 * s.curline / numl
         if perc > 100:
             s.fin = True
             perc = 100
