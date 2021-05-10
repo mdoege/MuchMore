@@ -2,7 +2,7 @@
 
 # AmigaOS MuchMore clone in PyGame
 
-import sys, struct
+import sys
 import pygame
 from math import sin, cos, pi
 import random, time
@@ -17,10 +17,24 @@ BLACK = 0, 0, 0
 WHITE = 255, 255, 255
 ORANGE = 255, 136, 0
 
-numl = 0
-for x in open(sys.argv[1]).readlines():
+if len(sys.argv) < 2:
+    print()
+    print("No input file given.")
+    print("Usage: muchmore.py filename [search term]")
+    sys.exit(1)
+
+numl, found = 0, -1
+for n, x in enumerate(open(sys.argv[1]).readlines()):
     numl += 1
+    if len(sys.argv) > 2:
+        if sys.argv[2] in x and found < 0:
+            found = n
 infile = open(sys.argv[1])
+
+# advance to search term if any
+if found > -1:
+    for n in range(found):
+        infile.readline()
 
 # font data
 nn = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 

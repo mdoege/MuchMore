@@ -5,6 +5,8 @@ A clone of the AmigaOS MuchMore soft-scrolling text viewer in PyGame
 ![screenshot](https://github.com/mdoege/MuchMore/raw/master/screenshot.png
  "MuchMore screenshot")
 
+Usage: muchmore.py filename [search term]
+
 Pause scrolling with Space, Return, or a mouse click; toggle slow scrolling
 with "s"; Escape to quit.
 
