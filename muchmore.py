@@ -4,8 +4,6 @@
 
 import sys
 import pygame
-from math import sin, cos, pi
-import random, time
 
 RES = 640
 RES2 = RES/2
