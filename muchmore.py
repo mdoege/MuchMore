@@ -21,13 +21,22 @@ if len(sys.argv) < 2:
     print("Usage: muchmore.py filename [search term]")
     sys.exit(1)
 
+# check encoding, fall back to Latin-1
+enc = "utf-8"
+try:
+    for n, x in enumerate(open(sys.argv[1]).readlines()):
+        pass
+except UnicodeDecodeError:
+    enc = "latin-1"
+
+# scan file and look for search term
 numl, found = 0, -1
-for n, x in enumerate(open(sys.argv[1]).readlines()):
+for n, x in enumerate(open(sys.argv[1], encoding = enc).readlines()):
     numl += 1
     if len(sys.argv) > 2:
         if sys.argv[2] in x and found < 0:
             found = n
-infile = open(sys.argv[1])
+infile = open(sys.argv[1], encoding = enc)
 
 # advance to search term if any
 if found > -1:
