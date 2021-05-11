@@ -24,7 +24,7 @@ if len(sys.argv) < 2:
 # check encoding, fall back to Latin-1
 enc = "utf-8"
 try:
-    for n, x in enumerate(open(sys.argv[1]).readlines()):
+    for n, x in enumerate(open(sys.argv[1], encoding = enc).readlines()):
         pass
 except UnicodeDecodeError:
     enc = "latin-1"
