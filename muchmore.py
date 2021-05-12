@@ -306,7 +306,6 @@ class MuchMore:
         s.curline = 0   # current pixel line
         s.paused = False
         s.dir = True    # scrolling direction
-        s.fin = False   # file finished?
 
     def events(s):
         global tile, slow
@@ -326,10 +325,6 @@ class MuchMore:
                 else:
                     s.dir = True
                     s.paused = False
-                if s.fin:
-                    s.running = False
-                    pygame.display.set_caption('MuchMore: '
-                                         + sys.argv[1] + " (done)")
             if ((event.type == pygame.KEYDOWN and event.key ==
                                                      pygame.K_BACKSPACE)
                     or (event.type == pygame.MOUSEBUTTONDOWN and
@@ -339,10 +334,6 @@ class MuchMore:
                 else:
                     s.dir = False
                     s.paused = False
-                if s.fin:
-                    s.running = False
-                    pygame.display.set_caption('MuchMore: '
-                                         + sys.argv[1] + " (done)")
 
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 s.running = False
@@ -361,15 +352,12 @@ class MuchMore:
         pygame.quit()
 
     def update(s):
-        if s.paused or s.fin:
+        if s.paused:
             out = pygame.transform.scale(s.dazz, s.res)
             s.screen.blit(out, (0, 0))
             pygame.display.flip()
             return
-        if s.dir:
-            s.txt = line(s.curline, s.dir)
-        else:
-            s.txt = line(s.curline, s.dir)
+        s.txt = line(s.curline, s.dir)
         ll = s.txt
         if s.dir:
             s.dazz.scroll(dy=-1)
@@ -396,18 +384,15 @@ class MuchMore:
             perc = 100 * (s.curline // 16 + found) / numl
         else:
             perc = 100 * s.curline // 16 / numl
-        if perc > 100:
-            s.fin = True
-            perc = 100
-        else:
-            perc = int(perc)
-        if s.fin:
-            pygame.display.set_caption('MuchMore: ' + sys.argv[1] + " (done)")
-        else:
-            pygame.display.set_caption('MuchMore: ' + sys.argv[1]
-                     + f" ({perc}%)")
+        perc = int(.5 + perc)
+        pygame.display.set_caption('MuchMore: ' + sys.argv[1] + f" ({perc}%)")
         if s.dir:
             s.curline += 1
+            ml = len(data) * 16
+            if s.curline >= ml:
+                s.dir = False
+                s.curline = ml - 1
+                s.paused = True
         else:
             s.curline -= 1
             if s.curline < 479:
