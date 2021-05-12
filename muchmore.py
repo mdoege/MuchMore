@@ -331,7 +331,7 @@ class MuchMore:
                         event.button == RIGHT)):
                 if not s.dir:
                     s.paused = not s.paused
-                else:
+                elif s.curline > 479:
                     s.dir = False
                     s.paused = False
 
