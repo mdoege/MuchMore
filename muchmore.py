@@ -15,6 +15,9 @@ BLACK = 0, 0, 0
 WHITE = 255, 255, 255
 ORANGE = 255, 136, 0
 
+LEFT = 1
+RIGHT = 3
+
 if len(sys.argv) < 2:
     print()
     print("No input file given.")
@@ -37,11 +40,14 @@ for n, x in enumerate(open(sys.argv[1], encoding = enc).readlines()):
         if sys.argv[2] in x and found < 0:
             found = n
 infile = open(sys.argv[1], encoding = enc)
+data = []
 
 # advance to search term if any
 if found > -1:
     for n in range(found):
         infile.readline()
+for x in infile.readlines():
+    data.append(x[:80])
 
 # font data
 nn = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
@@ -271,14 +277,21 @@ def ch(c, n):
             res += " "
     return res
 
-def line(x):
+def line(n, d):
+    if d:
+        off = n % 16
+    else:
+        off = (n - 480) % 16
+    num = (n - off) // 16
+    if not d:
+        num -= 30
+    if num < 0 or num > len(data) - 1:
+        return " "
+    x = data[num]
     x = x.replace("\t", "    ")
     res = ""
-    for n in range(16):
-        out = ""
-        for c in x:
-            out += ch(c, n)
-        res += out + "\n"
+    for c in x:
+        res += ch(c, off)
     return res
 
 class MuchMore:
@@ -290,10 +303,10 @@ class MuchMore:
         s.clock = pygame.time.Clock()
         s.dazz = pygame.Surface((RES, 0.75 * RES))
         s.dazz.fill(BLUE)
-        s.last = 0
-        s.curline = 0
+        s.curline = 0   # current pixel line
         s.paused = False
-        s.fin = False
+        s.dir = True    # scrolling direction
+        s.fin = False   # file finished?
 
     def events(s):
         global tile, slow
@@ -306,8 +319,26 @@ class MuchMore:
                 s.screen = pygame.display.set_mode(s.res, pygame.RESIZABLE)
             if ((event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE)
              or (event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN)
-                    or event.type == pygame.MOUSEBUTTONDOWN):
-                s.paused = not s.paused
+                    or (event.type == pygame.MOUSEBUTTONDOWN and
+                        event.button == LEFT)):
+                if s.dir:
+                    s.paused = not s.paused
+                else:
+                    s.dir = True
+                    s.paused = False
+                if s.fin:
+                    s.running = False
+                    pygame.display.set_caption('MuchMore: '
+                                         + sys.argv[1] + " (done)")
+            if ((event.type == pygame.KEYDOWN and event.key ==
+                                                     pygame.K_BACKSPACE)
+                    or (event.type == pygame.MOUSEBUTTONDOWN and
+                        event.button == RIGHT)):
+                if not s.dir:
+                    s.paused = not s.paused
+                else:
+                    s.dir = False
+                    s.paused = False
                 if s.fin:
                     s.running = False
                     pygame.display.set_caption('MuchMore: '
@@ -335,26 +366,36 @@ class MuchMore:
             s.screen.blit(out, (0, 0))
             pygame.display.flip()
             return
-        if s.last == 0:
-            s.txt = line(infile.readline()[:80]).splitlines()
-            s.curline += 1
-        ll = s.txt[s.last]
-        s.dazz.scroll(dy=-1)
-        pygame.draw.line(s.dazz, BLUE,
+        if s.dir:
+            s.txt = line(s.curline, s.dir)
+        else:
+            s.txt = line(s.curline, s.dir)
+        ll = s.txt
+        if s.dir:
+            s.dazz.scroll(dy=-1)
+            pygame.draw.line(s.dazz, BLUE,
                     (0, 479), (639, 479))
-        for n, x in enumerate(ll):
-            if x == "*":
-                pygame.draw.line(s.dazz, WHITE,
-                    (n, 479), (n, 479))
+            for n, x in enumerate(ll):
+                if x == "*":
+                    pygame.draw.line(s.dazz, WHITE,
+                        (n, 479), (n, 479))
+        else:
+            s.dazz.scroll(dy=1)
+            pygame.draw.line(s.dazz, BLUE,
+                    (0, 0), (639, 0))
+            for n, x in enumerate(ll):
+                if x == "*":
+                    pygame.draw.line(s.dazz, WHITE,
+                        (n, 0), (n, 0))
                 
         out = pygame.transform.scale(s.dazz, s.res)
         s.screen.blit(out, (0, 0))
         pygame.display.flip()
 
         if found > -1:
-            perc = 100 * (s.curline + found) / numl
+            perc = 100 * (s.curline // 16 + found) / numl
         else:
-            perc = 100 * s.curline / numl
+            perc = 100 * s.curline // 16 / numl
         if perc > 100:
             s.fin = True
             perc = 100
@@ -365,9 +406,14 @@ class MuchMore:
         else:
             pygame.display.set_caption('MuchMore: ' + sys.argv[1]
                      + f" ({perc}%)")
-        s.last += 1
-        if s.last == 16:
-            s.last = 0
+        if s.dir:
+            s.curline += 1
+        else:
+            s.curline -= 1
+            if s.curline < 479:
+                s.dir = True
+                s.curline = 479
+                s.paused = True
 
 c = MuchMore()
 c.run()
