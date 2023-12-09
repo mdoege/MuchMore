@@ -56,6 +56,7 @@ if found > -1:
 # read file and optionally wrap long lines
 for x in infile.readlines():
     x = x.rstrip()
+    x = x.replace("\t", "    ")
     if len(x) > 80 and WRAP:
         for i in range(ceil(len(x) / 80)):
             data.append(x[80 * i: 80 * i + 80])
@@ -96,7 +97,6 @@ def line(n, d):
     if num < 0 or num > len(data) - 1:
         return " "
     x = data[num]
-    x = x.replace("\t", "    ")
     res = ""
     for c in x:
         res += ch(c, off)
