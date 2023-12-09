@@ -4,12 +4,14 @@
 
 import sys, struct
 from os.path import join, abspath, dirname
+from math import ceil
 import pygame
 
 RES = 640
 RES2 = RES/2
 SRES = 1280         # initial window width
 slow = False        # slow mode (press S to toggle)
+WRAP = True         # wrap long lines?
 
 FONT = "Topaz_a500_v1.0.raw"
 #FONT = "Topaz_a1200_v1.0.raw"
@@ -38,9 +40,8 @@ except UnicodeDecodeError:
     enc = "latin-1"
 
 # scan file and look for search term
-numl, found = 0, -1
+found = -1
 for n, x in enumerate(open(sys.argv[1], encoding = enc).readlines()):
-    numl += 1
     if len(sys.argv) > 2:
         if sys.argv[2] in x and found < 0:
             found = n
@@ -51,8 +52,17 @@ data = []
 if found > -1:
     for n in range(found):
         infile.readline()
+
+# read file and optionally wrap long lines
 for x in infile.readlines():
-    data.append(x[:80])
+    x = x.rstrip()
+    if len(x) > 80 and WRAP:
+        for i in range(ceil(len(x) / 80)):
+            data.append(x[80 * i: 80 * i + 80])
+    else:
+        data.append(x[:80])
+
+numl = len(data)
 
 # load font data
 home = dirname(abspath(__file__))
@@ -182,10 +192,7 @@ class MuchMore:
         s.screen.blit(out, (0, 0))
         pygame.display.flip()
 
-        if found > -1:
-            perc = 100 * (s.curline // 16 + found) / numl
-        else:
-            perc = 100 * s.curline // 16 / numl
+        perc = 100 * s.curline // 16 / numl
         perc = int(.5 + perc)
         pygame.display.set_caption('MuchMore: ' + sys.argv[1] + f" ({perc}%)")
         if s.dir:
